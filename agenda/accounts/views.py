@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib import messages
+from django.core.validators import validate_email
 # Create your views here.
 
 def login(request):
@@ -10,16 +11,32 @@ def logout(request):
 
    
 def cadastro(request):
-   
-     # messages.success(request,'Ola mundo')
     nome = request.POST.get('nome')
     sobrenome = request.POST.get('sobrenome')
     email = request.POST.get('email')
     usuario = request.POST.get('usuario')
     senha = request.POST.get('senha')
     senha2 = request.POST.get('senha2')
-    print(nome, sobrenome)
     
+    if not nome or not sobrenome or not email or not usuario or not senha or not senha2:
+        messages.error(request,'Campos faltantes')
+        
+        return render(request,'cadastro.html')
+
+    if not senha == senha2:
+        messages.error(request,'Senhas não conferem')
+        
+        return render(request,'cadastro.html')
+    
+    # try:
+    #     validate_email(email)
+    # except:
+    #     messages.error(request,'Email inválido')
+    #     return render(request,'cadastro.html')
+
+    
+    messages.success(request,'Cadastro realizado com sucesso.')
+
     return render(request, 'cadastro.html')
 
 def dashboard(request):
