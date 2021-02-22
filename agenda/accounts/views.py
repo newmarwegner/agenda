@@ -1,16 +1,35 @@
-from django.shortcuts import render
-from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib import messages, auth
 from django.core.validators import validate_email
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 def login(request):
-    return render(request, 'login.html')
+    if request.method != 'POST':
+        return render(request,'login.html')
+
+    usuario = request.POST.get('usuario')
+    senha = request.POST.get('senha')
+
+    user = auth.authenticate(request,username=usuario,password=senha)
+    if not user:
+        messages.error(request,'Usuário ou senha inválidos')
+    else:
+        auth.login(request,user)
+        messages.success(request,'Você fez login com sucesso!')
+
+        return redirect('dashboard')
 
 def logout(request):
-    return render(request, 'logout.html')
+    auth.logout(request)
 
-   
+    return redirect('cadastro')
+
 def cadastro(request):
+    if request.method != 'POST':
+        return render(request,'cadastro.html')
+
     nome = request.POST.get('nome')
     sobrenome = request.POST.get('sobrenome')
     email = request.POST.get('email')
@@ -20,24 +39,51 @@ def cadastro(request):
     
     if not nome or not sobrenome or not email or not usuario or not senha or not senha2:
         messages.error(request,'Campos faltantes')
-        
+
         return render(request,'cadastro.html')
 
     if not senha == senha2:
         messages.error(request,'Senhas não conferem')
         
         return render(request,'cadastro.html')
-    
-    # try:
-    #     validate_email(email)
-    # except:
-    #     messages.error(request,'Email inválido')
-    #     return render(request,'cadastro.html')
 
-    
-    messages.success(request,'Cadastro realizado com sucesso.')
+    if len(usuario) < 6:
+        messages.error(request, 'Usuário precisa ter 6 caracteres ou mais')
 
-    return render(request, 'cadastro.html')
+        return render(request, 'cadastro.html')
 
+    if len(senha) < 6:
+        messages.error(request, 'Senha precisa ter 6 caracteres ou mais')
+
+        return render(request, 'cadastro.html')
+
+    if User.objects.filter(username=usuario).exists():
+        messages.error(request, 'Usuário já existe')
+
+        return render(request, 'cadastro.html')
+
+    if User.objects.filter(email=email).exists():
+        messages.error(request, 'Email já existe')
+
+        return render(request, 'cadastro.html')
+
+    try:
+        validate_email(email)
+    except:
+        messages.error(request,'Email inválido')
+        return render(request,'cadastro.html')
+
+    messages.success(request, 'Registrado com sucesso! Agora faça login.')
+
+    user = User.objects.create_user(username=usuario,
+                                    email=email,
+                                    password=senha,
+                                    first_name=nome,
+                                    last_name=sobrenome)
+    user.save()
+
+    return redirect('login')
+
+@login_required(redirect_field_name='login')
 def dashboard(request):
     return render(request, 'dashboard.html')
