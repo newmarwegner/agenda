@@ -1,22 +1,28 @@
 {% extends 'base.html' %}
-
+{%block title%}Login{%endblock%}
 {% block conteudo %}
 <div style="margin-left: 8em; margin-right: 8em;">
     <br>
 <h1>Login</h1>
-<form method="POST" action="{% url 'login' %}">
-    {% include '_messages.html'%}
-    {% csrf_token %}
-    <br>
-    <div class="form-group">
-        <label>Usuário</label>
-        <input type="text" value="{{ request.POST.usuario }}" name="usuario" class="form-control">
-    </div>
-    <div class="form-group">
-        <label>Senha</label>
-        <input type="password" name="senha" class="form-control">
-    </div>
-  <button type="submit" class="btn btn-primary">Entrar</button>
-</form>
+{% if not user.is_authenticated %}
+    <form method="POST" action="{% url 'login' %}">
+        {% include '_messages.html'%}
+        {% csrf_token %}
+        <br>
+        <div class="form-group">
+            <label>Usuário</label>
+            <input type="text" value="{{ request.POST.usuario }}" name="usuario" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" name="senha" class="form-control">
+        </div>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+{% else %}
+    Você fez login com {{user}},
+    <a href="{% url 'logout'%}"> Clique aqui</a> para sair.
+{% endif %}
+
 </div>
 {% endblock %}
